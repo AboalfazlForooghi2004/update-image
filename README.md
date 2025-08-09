@@ -1,41 +1,41 @@
+Here’s your English version with the emojis preserved:
 
+---
+
+````markdown
 # 🔄 Switch Image Update via Console Server
 
-این اسکریپت با استفاده از کتابخانهٔ **`pexpect`** به یک **سرور کنسول** وصل می‌شود و عملیات **به‌روزرسانی سیستم‌عامل سوییچ** را از طریق یک **سرور HTTP** انجام می‌دهد.  
-خروجی‌ها به‌صورت زنده با استفاده از **ماژول `logging`** در ترمینال نمایش داده می‌شوند.  
+This script uses the **`pexpect`** library to connect to a **console server** and perform a **switch firmware update** via an **HTTP server**.  
+All output is displayed live in the terminal using the **`logging`** module.  
 
 ---
 
-## ✨ ویژگی‌ها
-- 🔌 **اتصال خودکار** به سرور کنسول با SSH  
-- 🖥 **ورود به پورت سریال** و احراز هویت روی سوییچ  
-- 🚀 اجرای فرمان `update image` از طریق HTTP  
-- 👀 **نمایش زنده خروجی** در ترمینال  
-- 🛡 **مدیریت خطاها** با `try/except/finally`  
+## ✨ Features
+- 🔌 **Automatic connection** to the console server via SSH  
+- 🖥 **Access serial port** and authenticate to the switch  
+- 🚀 Execute the `update image` command via HTTP  
+- 👀 **Live output** in the terminal  
+- 🛡 **Error handling** with `try/except/finally`  
 
 ---
 
-## 📦 پیش‌نیازها
+## 📦 Requirements
 - 🐍 **Python 3.6+**
-- 📚 نصب کتابخانه‌ها:
+- 📚 Install required libraries:
   ```bash
   pip install pexpect
+````
 
+* 🌐 Access to:
 
-
- * 🌐 دسترسی به:
-
-       * سرور کنسول (IP و یوزر/پسورد)
-
-       * اطلاعات ورود به سوییچ
-
-       * وب‌سرور حاوی فایل سیستم‌عامل
-
-       *  IP مدیریت سوییچ و Gateway پیش‌فرض  
+  * Console server (IP and username/password)
+  * Switch login credentials
+  * HTTP server hosting the firmware image
+  * Switch management IP and default gateway
 
 ---
 
-## ⚙ پیکربندی پیش‌فرض در کد
+## ⚙ Default Configuration in Code
 
 ```python
 console_ip = "192.168.30.20"
@@ -46,50 +46,52 @@ webserver_ip = "192.168.0.19"
 default_gw = "192.168.30.2"
 ```
 
-> 📝 **نکته:** این مقادیر را متناسب با شبکهٔ خود تغییر دهید.
+> 📝 **Note:** Adjust these values according to your network environment.
 
 ---
 
-## ▶ نحوهٔ اجرا
+## ▶ How to Run
 
-1. 💾 کد را در یک فایل ذخیره کنید، مثلا:
+1. 💾 Save the script to a file, for example:
 
    ```bash
    nano update_switch.py
    ```
 
-2. ▶ اجرا کنید:
+2. ▶ Run it:
 
    ```bash
    python update_switch.py
    ```
 
-3. ⌨ در حین اجرا، اطلاعات زیر را وارد کنید:
+3. ⌨ During execution, you will be prompted to enter:
 
    * **Console server username** 🧑‍💻
-   * **Image filename** 📂 (نام فایل روی وب‌سرور)
-   * **Management IP with subnet** 🌐 (مثل: `192.168.30.34/24`)
+   * **Image filename** 📂 (the file on the HTTP server)
+   * **Management IP with subnet** 🌐 (e.g. `192.168.30.34/24`)
 
-4. 🛠 اسکریپت به‌طور خودکار به سرور کنسول وصل شده و عملیات آپدیت را انجام می‌دهد.
-
----
-
-## 📜 خروجی
-
-* 📡 تمام پیام‌ها و پاسخ‌های سوییچ به‌صورت زنده در ترمینال نمایش داده می‌شوند.
-* ⚠ در صورت بروز مشکل، پیام خطا به‌وضوح ثبت می‌شود.
+4. 🛠 The script will automatically connect to the console server and perform the update.
 
 ---
 
-## ⚠ نکات مهم
+## 📜 Output
 
-* قبل از اجرا مطمئن شوید که **سرور کنسول به پورت سریال سوییچ متصل است**.
-* فایل **سیستم‌عامل** باید در **وب‌سرور** قرار داشته باشد و از طریق IP تعیین‌شده قابل دسترس باشد.
-* تایم‌اوت عملیات آپدیت روی **۱۰ دقیقه** تنظیم شده است ⏳ (`timeout=600`).
+* 📡 All messages and switch responses will be shown live in the terminal.
+* ⚠ Any errors will be clearly logged.
 
 ---
 
-## 📄 مجوز
+## ⚠ Important Notes
 
-این اسکریپت **آزاد** برای استفاده داخلی شما است.
-برای استفاده در محیط‌های حساس، ابتدا آن را در محیط تست اجرا کنید 🧪.
+* Before running, make sure the **console server is connected to the switch’s serial port**.
+* The **firmware file** must be placed on the **HTTP server** and be accessible via the configured IP.
+* The update timeout is set to **10 minutes** ⏳ (`timeout=600`).
+
+---
+
+## 📄 License
+
+This script is **free** for internal use.
+For critical environments, test it first in a lab 🧪.
+
+```
