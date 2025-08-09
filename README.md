@@ -93,5 +93,3 @@ default_gw = "192.168.30.2"
 
 This script is **free** for internal use.
 For critical environments, test it first in a lab 🧪.
-
-```
