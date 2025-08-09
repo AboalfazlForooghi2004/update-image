@@ -1,7 +1,14 @@
 import pexpect
 import getpass
 import sys
-import io
+import logging
+
+# -------- Logging Configuration (بدون رنگ) --------
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # -------- Get user input --------
 console_ip = "192.168.30.20"
@@ -15,70 +22,85 @@ console_user = input(" Console server username: ")
 image_file = input(" Image filename : ")
 mgmt_ip = input(" Management IP with subnet (e.g. 192.168.30.34/24): ")
 
-print("\n🔌 Connecting to console server...\n")
-child = pexpect.spawn(f"ssh {console_user}@{console_ip}", timeout=30)
+child = None
 
-child.expect("password:")
-child.sendline(console_pass)
+try:
+    logging.info("🔌 Connecting to console server...")
+    # <-- اینجا encoding اضافه شد تا pexpect خروجی‌ها رو به str تبدیل کنه
+    child = pexpect.spawn(f"ssh {console_user}@{console_ip}", timeout=30, encoding='utf-8')
 
-# Select serial port (default: 1)
-child.expect(r"#\?")
-child.sendline("1")
+    child.expect("password:")
+    child.sendline(console_pass)
 
-# Send ENTERs to trigger login prompt
-child.sendline("")
-child.sendline("")
-child.sendline("")
+    # Select serial port (default: 1)
+    child.expect(r"#\?")
+    child.sendline("1")
 
-# Try to detect switch state
-index = child.expect([
-    "login:",
-    "Password:",
-    "#",  # already in CLI
-], timeout=10)
+    # Send ENTERs to trigger login prompt
+    child.sendline("")
+    child.sendline("")
 
-if index == 0:
-    child.sendline(switch_user)
-    child.expect("Password:")
-    child.sendline(switch_pass)
-elif index == 1:
-    child.sendline(switch_pass)
-else:
-    print("✅ Already inside switch CLI.")
+    # Try to detect switch state
+    index = child.expect([
+        "login:",
+        "Password:",
+        "#",  # already in CLI
+    ], timeout=10)
 
-# Enter enable and config mode
-child.expect(".*#")
-child.sendline("enable")
-child.expect(".*#")
-child.sendline("configure terminal")
-child.expect(".*\\(config\\)#")
+    if index == 0:
+        child.sendline(switch_user)
+        child.expect("Password:")
+        child.sendline(switch_pass)
+    elif index == 1:
+        child.sendline(switch_pass)
+    else:
+        logging.info("✅ Already inside switch CLI.")
 
-# Build and send update command
-update_cmd = f"update image http {webserver_ip} {image_file} {mgmt_ip} {default_gw}"
-print(f"\n🚀 Sending update command: {update_cmd}\n")
-child.sendline(update_cmd)
+    # Enter enable and config mode
+    child.expect(".*#")
+    child.sendline("enable")
+    child.expect(".*#")
+    child.sendline("configure terminal")
+    child.expect(".*\\(config\\)#")
 
-# Confirm update
-child.expect("Are you sure to update device\\?\\(yes/no\\)")
-child.sendline("yes")
+    # Build and send update command
+    update_cmd = f"update image http {webserver_ip} {image_file} {mgmt_ip} {default_gw}"
+    logging.info(f"🚀 Sending update command: {update_cmd}")
+    child.sendline(update_cmd)
 
-# Respond to config/restore question
-child.expect("Would you like to restore config and storage after update image\\?\\(yes/no\\)")
-child.sendline("no")
+    # Confirm update
+    child.expect("Are you sure to update device\\?\\(yes/no\\)")
+    child.sendline("yes")
 
-# ✅ Now start showing CLI output live
-print("\n⏳ Updating... Please wait.\n")
-child.logfile = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-# Wait for update to complete
-index = child.expect([
-    "Update completed",
-    pexpect.TIMEOUT,
-    pexpect.EOF
-], timeout=600)
+    # Respond to config/restore question
+    child.expect("Would you like to restore config and storage after update image\\?\\(yes/no\\)")
+    child.sendline("no")
 
-if index == 0:
-    print("\n✅ Update completed successfully.")
-else:
-    print("\n❌ Error or timeout during update.")
+    logging.info("⏳ Updating... Please wait.")
+    # با encoding='utf-8' این کار امنه:
+    child.logfile = sys.stdout
 
-child.close()
+    # Wait for update to complete
+    index = child.expect([
+        "Update completed",
+        pexpect.TIMEOUT,
+        pexpect.EOF
+    ], timeout=600)
+
+    if index == 0:
+        logging.info("✅ Update completed successfully.")
+    else:
+        logging.error("❌ Error or timeout during update.")
+
+except pexpect.exceptions.TIMEOUT:
+    logging.error("⏰ Timeout occurred during communication. Please check the device or network.")
+except pexpect.exceptions.EOF:
+    logging.error("🔌 Connection was closed unexpectedly.")
+except Exception as e:
+    logging.exception(f"⚠️ Unexpected error: {e}")
+finally:
+    if child is not None:
+        try:
+            child.close()
+        except Exception as e:
+            logging.warning(f"⚠️ Failed to close child session cleanly: {e}")
