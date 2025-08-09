@@ -1,9 +1,8 @@
 import pexpect
-import getpass
 import sys
 import logging
 
-# -------- Logging Configuration (بدون رنگ) --------
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -26,7 +25,6 @@ child = None
 
 try:
     logging.info("🔌 Connecting to console server...")
-    # <-- اینجا encoding اضافه شد تا pexpect خروجی‌ها رو به str تبدیل کنه
     child = pexpect.spawn(f"ssh {console_user}@{console_ip}", timeout=30, encoding='utf-8')
 
     child.expect("password:")
@@ -54,7 +52,7 @@ try:
     elif index == 1:
         child.sendline(switch_pass)
     else:
-        logging.info("✅ Already inside switch CLI.")
+        logging.info(" Already inside switch CLI.")
 
     # Enter enable and config mode
     child.expect(".*#")
@@ -65,7 +63,7 @@ try:
 
     # Build and send update command
     update_cmd = f"update image http {webserver_ip} {image_file} {mgmt_ip} {default_gw}"
-    logging.info(f"🚀 Sending update command: {update_cmd}")
+    logging.info(f" Sending update command: {update_cmd}")
     child.sendline(update_cmd)
 
     # Confirm update
@@ -76,8 +74,8 @@ try:
     child.expect("Would you like to restore config and storage after update image\\?\\(yes/no\\)")
     child.sendline("no")
 
-    logging.info("⏳ Updating... Please wait.")
-    # با encoding='utf-8' این کار امنه:
+    logging.info(" Updating... Please wait.")
+
     child.logfile = sys.stdout
 
     # Wait for update to complete
@@ -88,19 +86,19 @@ try:
     ], timeout=600)
 
     if index == 0:
-        logging.info("✅ Update completed successfully.")
+        logging.info(" Update completed successfully.")
     else:
-        logging.error("❌ Error or timeout during update.")
+        logging.error(" Error or timeout during update.")
 
 except pexpect.exceptions.TIMEOUT:
-    logging.error("⏰ Timeout occurred during communication. Please check the device or network.")
+    logging.error(" Timeout occurred during communication. Please check the device or network.")
 except pexpect.exceptions.EOF:
-    logging.error("🔌 Connection was closed unexpectedly.")
+    logging.error(" Connection was closed unexpectedly.")
 except Exception as e:
-    logging.exception(f"⚠️ Unexpected error: {e}")
+    logging.exception(f" Unexpected error: {e}")
 finally:
     if child is not None:
         try:
             child.close()
         except Exception as e:
-            logging.warning(f"⚠️ Failed to close child session cleanly: {e}")
+            logging.warning(f" Failed to close child session cleanly: {e}")
